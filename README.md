@@ -1,113 +1,119 @@
 # Foundry Fund Me
 
-A simple crowdfunding contract built with Foundry. It accepts ETH contributions, enforces a minimum USD value using a Chainlink price feed, and allows only the owner to withdraw. Includes deployment and interaction scripts plus unit/integration tests.
+ETH 众筹合约 + Next.js 前端全栈项目。合约基于 Foundry 构建，通过 Chainlink Price Feed 将最低捐款额锚定至 USD，仅 owner 可提款。前端使用 wagmi v2 + RainbowKit + Tailwind CSS。
 
-## About
+## 架构
 
-Key pieces:
-- `src/FundMe.sol`: main contract with `fund`, `withdraw`, and `cheaperWithdraw`.
-- `src/PriceConverter.sol`: library that converts ETH to USD using a Chainlink feed.
-- `script/DeployFundMe.s.sol`: deploys `FundMe` with a network-appropriate price feed.
-- `script/Interactions.s.sol`: helper scripts to fund and withdraw.
-- `test/unit/*`: unit tests for core logic and zkSync devops checks.
-- `test/integration/*`: integration test that runs the scripts end-to-end.
+```
+src/
+  FundMe.sol          - 主合约：fund / withdraw / cheaperWithdraw
+  PriceConverter.sol  - 库：调用 Chainlink 将 ETH 换算为 USD
+script/
+  DeployFundMe.s.sol  - 部署脚本，自动选择对应网络的 priceFeed
+  HelperConfig.s.sol  - 网络配置（chainId → priceFeed 地址）
+  Interactions.s.sol  - fund / withdraw 交互脚本
+test/
+  unit/               - 单元测试（FundMeTest, ZkSyncDevOps）
+  integration/        - 集成测试（脚本端到端验证）
+  mocks/              - MockV3Aggregator（本地测试用）
+frontend/             - Next.js 前端（wagmi v2 + RainbowKit + Tailwind）
+lib/                  - 依赖（chainlink-brownie-contracts, foundry-devops, forge-std）
+```
+
+## 网络支持
+
+| 网络 | priceFeed | 部署命令 |
+|------|-----------|----------|
+| Anvil (本地) | MockV3Aggregator（自动部署） | `make deploy` |
+| Sepolia | 0x694AA1769357215DE4FAC081bf1f309aDC325306 | `make deploy-sepolia` |
+| Mainnet | 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419 | — |
+| zkSync local | MockV3Aggregator | `make deploy-zk` |
+| zkSync Sepolia | 0xfEefF7c3fB57d18C5C6Cdd71e45D2D0b4F9377bF | `make deploy-zk-sepolia` |
 
 ## Requirements
 
-- Foundry (`forge`, `anvil`)
-- Node.js (only needed for `zk-anvil`)
-- A `.env` file if deploying to live networks
+- [Foundry](https://getfoundry.sh/)（`forge`, `anvil`）
+- Node.js 18+（前端 + `zk-anvil`）
+- `.env` 文件（仅部署至测试网/主网时需要）
 
-## Getting Started
+## 快速开始
 
-### Install dependencies
-
-```bash
-forge install
-```
-
-Or use the Makefile:
+### 安装依赖
 
 ```bash
-make install
+make install       # 安装 Foundry 依赖
+cd frontend && npm install   # 安装前端依赖
 ```
 
-### Build
+### 构建 & 测试
 
 ```bash
 forge build
-```
-
-### Test
-
-```bash
 forge test
-```
 
-Run only integration tests:
-
-```bash
+# 仅跑集成测试
 forge test --match-path test/integration/*
 ```
 
-## Quickstart (Local)
-
-1) Start anvil:
+### 本地全栈开发
 
 ```bash
+# 终端 1：启动本地链
 anvil
-```
 
-2) Deploy:
-
-```bash
+# 终端 2：部署合约
 make deploy
+
+# 终端 3：启动前端
+cd frontend && npm run dev
 ```
 
-3) Fund/withdraw using scripts:
+前端默认访问 `http://localhost:3000`，连接本地 Anvil 节点。
+
+### fund / withdraw（本地）
 
 ```bash
 make fund
 make withdraw
 ```
 
-Note: `make fund` and `make withdraw` require `SENDER_ADDRESS` to be set in the Makefile or via environment.
+> `make fund` / `make withdraw` 需要 `SENDER_ADDRESS`，Makefile 中默认使用 Anvil 账户 #0。
 
-## Deploying to Sepolia
+## 部署至 Sepolia
 
-Create a `.env` file with:
+创建 `.env` 文件（不提交）：
 
-```bash
+```env
 SEPOLIA_RPC_URL=...
 ACCOUNT=default
 ETHERSCAN_API_KEY=...
 ```
 
-Then deploy with:
-
 ```bash
 make deploy-sepolia ARGS="--network sepolia"
 ```
 
-## zkSync Notes
-
-There are zkSync-specific helpers and tests:
-
-- Build: `make zkbuild`
-- Test: `make zktest`
-- Local zkSync dev node: `make zk-anvil`
-- Deploy to local zkSync: `make deploy-zk`
-- Deploy to zkSync Sepolia:
+## zkSync
 
 ```bash
-ZKSYNC_SEPOLIA_RPC_URL=...
-make deploy-zk-sepolia
+make zkbuild           # 编译
+make zktest            # 测试
+make zk-anvil          # 启动本地 zkSync 节点
+make deploy-zk         # 部署至本地 zkSync
+make deploy-zk-sepolia # 部署至 zkSync Sepolia（需 ZKSYNC_SEPOLIA_RPC_URL）
 ```
 
-## Makefile Targets (Selected)
+## Makefile 主要目标
 
-- `make build` / `make test`
-- `make deploy` / `make deploy-sepolia`
-- `make fund` / `make withdraw`
-- `make anvil` / `make zk-anvil`
-- `make format` / `make snapshot`
+| 目标 | 说明 |
+|------|------|
+| `make build` | forge build |
+| `make test` | forge test |
+| `make deploy` | 部署至本地 Anvil |
+| `make deploy-sepolia` | 部署至 Sepolia |
+| `make fund` | 调用 fund 脚本 |
+| `make withdraw` | 调用 withdraw 脚本 |
+| `make anvil` | 启动 Anvil |
+| `make zk-anvil` | 启动本地 zkSync 节点 |
+| `make format` | forge fmt |
+| `make snapshot` | gas snapshot |

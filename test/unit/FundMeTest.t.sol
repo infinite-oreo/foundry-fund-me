@@ -9,7 +9,12 @@ import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {DeployFundMe} from "../../script/DeployFundMe.s.sol";
 
-
+/**
+ * [INPUT]: 依赖 FundMe 合约，依赖 HelperConfig 获取 priceFeed（直接实例化，不经 DeployFundMe）
+ * [OUTPUT]: 单元测试套件，覆盖 fund/withdraw/cheaperWithdraw 核心路径，owner = address(this)
+ * [POS]: test/unit/ 的主测试文件，与集成测试互补，专注合约逻辑隔离验证
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
 contract FundMeTest is Test {
     FundMe fundMe;
     HelperConfig helperConfig;
@@ -99,11 +104,8 @@ contract FundMeTest is Test {
         //Arrange
         uint160 numberOfFunders = 10;
         uint160 startingFunderIndex = 1;
-        for(uint256 i = startingFunderIndex; i < numberOfFunders; i++){
-            //vm.prank, new address
-            //vm.deal, new address
-            //address()
-            hoax(address(uint160(i)),SEND_VALUE);
+        for(uint160 i = startingFunderIndex; i < numberOfFunders; i++){
+            hoax(address(i), SEND_VALUE);
             fundMe.fund{value: SEND_VALUE}();
         }
 
@@ -129,11 +131,8 @@ contract FundMeTest is Test {
         //Arrange
         uint160 numberOfFunders = 10;
         uint160 startingFunderIndex = 1;
-        for(uint256 i = startingFunderIndex; i < numberOfFunders; i++){
-            //vm.prank, new address
-            //vm.deal, new address
-            //address()
-            hoax(address(uint160(i)),SEND_VALUE);
+        for(uint160 i = startingFunderIndex; i < numberOfFunders; i++){
+            hoax(address(i), SEND_VALUE);
             fundMe.fund{value: SEND_VALUE}();
         }
 

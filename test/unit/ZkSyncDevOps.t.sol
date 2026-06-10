@@ -6,6 +6,12 @@ import {Test, console} from "forge-std/Test.sol";
 import {ZkSyncChainChecker} from "lib/foundry-devops/src/ZkSyncChainChecker.sol";
 import {FoundryZkSyncChecker} from "lib/foundry-devops/src/FoundryZkSyncChecker.sol";
 
+/**
+ * [INPUT]: 依赖 foundry-devops 的 ZkSyncChainChecker 和 FoundryZkSyncChecker modifier
+ * [OUTPUT]: zkSync 环境兼容性测试，验证 skipZkSync modifier 在 EVM/zkSync 间的行为差异
+ * [POS]: test/unit/ 的环境检测测试，与业务逻辑无关，专用于 zkSync 部署路径的兼容性验证
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
 contract ZkSyncDevOps is Test, ZkSyncChainChecker, FoundryZkSyncChecker {
     // Remove the `skipZkSync`, then run `forge test --mt testZkSyncChainFails --zksync` and this will fail!
     function testZkSyncChainFails() public skipZkSync {

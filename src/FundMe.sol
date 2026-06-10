@@ -5,6 +5,13 @@ pragma solidity ^0.8.18;
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {PriceConverter} from "./PriceConverter.sol";
 
+/**
+ * [INPUT]: 依赖 PriceConverter 的 getConversionRate，依赖 Chainlink AggregatorV3Interface
+ * [OUTPUT]: 对外提供 fund, withdraw, cheaperWithdraw, getVersion, getOwner, getFunder, getAddressToAmountFunded
+ * [POS]: src/ 的核心合约，众筹逻辑主体，被 DeployFundMe 部署，被 Interactions 脚本调用
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
 error NotOwner();
 
 contract FundMe {

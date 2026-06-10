@@ -13,8 +13,17 @@ docs/
 # Dotenv file
 .env
 
+# Claude Code
+CLAUDE.md
+**/CLAUDE.md
+.claude/
 
 broadcast/
 lib/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
 
 

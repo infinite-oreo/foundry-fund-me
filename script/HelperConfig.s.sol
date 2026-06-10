@@ -5,6 +5,12 @@ pragma solidity ^0.8.18;
 import {Script} from "forge-std/Script.sol";
 import {MockV3Aggregator} from "../test/mocks/MockV3Aggregator.sol";
 
+/**
+ * [INPUT]: 依赖 MockV3Aggregator（Anvil 环境），依赖链上 Chainlink 地址（Sepolia/Mainnet）
+ * [OUTPUT]: 对外提供 getActiveNetworkConfig() 返回 NetworkConfig{priceFeed}
+ * [POS]: script/ 的网络配置中枢，按 chainid 自动切换真实/mock priceFeed，被 DeployFundMe 和单元测试消费
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
 contract HelperConfig is Script {
     //If we are on a local anvil, we deploy mocks
     //Otherwise, grab the existing address from the live network

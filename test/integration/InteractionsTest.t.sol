@@ -10,7 +10,12 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 import {DeployFundMe} from "../../script/DeployFundMe.s.sol";
 import {FundFundMe, WithdrawFundMe} from "../../script/Interactions.s.sol";
 
-
+/**
+ * [INPUT]: 依赖 DeployFundMe 脚本，依赖 FundFundMe/WithdrawFundMe 交互脚本
+ * [OUTPUT]: 集成测试套件，验证 部署→fund→withdraw 完整链路
+ * [POS]: test/integration/ 的端到端验证，通过 DeployFundMe 部署合约（owner = DEFAULT_SENDER）
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
 contract InteractionsTest is Test {
     FundMe fundMe;
     HelperConfig helperConfig;
