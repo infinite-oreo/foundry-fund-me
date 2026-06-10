@@ -25,17 +25,16 @@ contract InteractionsTest is Test {
 
     address USER = makeAddr("user");
 
-
-    function setUp () external {
+    function setUp() external {
         DeployFundMe deploy = new DeployFundMe();
         fundMe = deploy.run();
-        vm.deal(USER, STARTING_BALANCE); 
+        vm.deal(USER, STARTING_BALANCE);
     }
 
-    function testUserCanFundInteractions () public {
+    function testUserCanFundInteractions() public {
         FundFundMe fundFundMe = new FundFundMe();
         fundFundMe.fundFundMe(address(fundMe));
-        
+
         WithdrawFundMe withdrawFundMe = new WithdrawFundMe();
         withdrawFundMe.withdrawFundMe(address(fundMe));
 

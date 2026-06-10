@@ -19,7 +19,6 @@ contract DeployFundMe is Script {
         HelperConfig.NetworkConfig memory networkConfig = helperConfig.getActiveNetworkConfig();
         address ethUsdPriceFeed = networkConfig.priceFeed;
 
-
         //After startBroadcast, real tx
 
         vm.startBroadcast();
