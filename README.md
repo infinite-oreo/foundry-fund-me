@@ -17,6 +17,10 @@ test/
   integration/        - 集成测试（脚本端到端验证）
   mocks/              - MockV3Aggregator（本地测试用）
 frontend/             - Next.js 前端（wagmi v2 + RainbowKit + Tailwind）
+  ├── src/components/   - Header, StatsPanel, FundCard, WithdrawCard, FundersLeaderboard
+  ├── src/hooks/        - useFundMe（合约读写逻辑聚合层）
+  ├── src/utils/        - explorer.ts（链浏览器 URL 工具）
+  └── src/constants/    - ABI, 合约地址
 lib/                  - 依赖（chainlink-brownie-contracts, foundry-devops, forge-std）
 ```
 
@@ -69,6 +73,22 @@ cd frontend && npm run dev
 ```
 
 前端默认访问 `http://localhost:3000`，连接本地 Anvil 节点。
+
+部署合约后，将输出的合约地址填入 `frontend/.env.local`：
+
+```env
+NEXT_PUBLIC_ANVIL_CONTRACT_ADDRESS=0x...  # make deploy 输出的地址
+```
+
+### 前端功能
+
+| 功能 | 说明 |
+|------|------|
+| StatsPanel | 合约余额、最低金额、Owner、我的贡献（实时轮询） |
+| FundCard | ETH 捐款表单，含交易确认状态 |
+| WithdrawCard | Owner 一键提取（非 owner 不可见） |
+| FundersLeaderboard | 捐款人排行榜，按金额降序，高亮当前用户 |
+| Etherscan 链接 | 交易成功后显示可点击的区块浏览器链接（Sepolia/Mainnet） |
 
 ### fund / withdraw（本地）
 
