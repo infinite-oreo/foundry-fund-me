@@ -1,14 +1,16 @@
 /**
  * [INPUT]: 依赖 wagmi hooks、viem、FUND_ME_ABI、CONTRACT_ADDRESSES
- * [OUTPUT]: 对外提供 useContractAddress, useFundMeStats, useMyContribution, useFund, useWithdraw
+ * [OUTPUT]: 对外提供 useContractAddress, useFundMeStats, useMyContribution, useFund, useWithdraw, useFundersList
  * [POS]: hooks/ 的核心聚合层，封装所有合约读写逻辑，组件不直接调用 wagmi
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 'use client'
 
+import { useMemo } from 'react'
 import {
   useReadContract,
+  useReadContracts,
   useWriteContract,
   useWaitForTransactionReceipt,
   useBalance,
@@ -107,4 +109,78 @@ export function useWithdraw() {
   }
 
   return { withdraw, hash, isPending, isConfirming, isSuccess, error, reset }
+}
+
+// 最大支持展示的捐款人数量（multicall 一次批量拉取，不影响性能）
+const MAX_FUNDERS = 50
+
+export function useFundersList() {
+  const contractAddress = useContractAddress()
+  const enabled = !!contractAddress
+
+  // Step 1: 批量读取 getFunder(0..MAX_FUNDERS-1)，越界自动 failure
+  const indexCalls = useMemo(
+    () =>
+      contractAddress
+        ? Array.from({ length: MAX_FUNDERS }, (_, i) => ({
+            address: contractAddress,
+            abi: FUND_ME_ABI,
+            functionName: 'getFunder' as const,
+            args: [BigInt(i)] as const,
+          }))
+        : [],
+    [contractAddress]
+  )
+
+  const { data: indexResults, isLoading: isLoadingAddresses } = useReadContracts({
+    contracts: indexCalls,
+    allowFailure: true,
+    query: { enabled, refetchInterval: 5_000 },
+  })
+
+  const funderAddresses = useMemo(
+    () =>
+      (indexResults ?? [])
+        .filter((r) => r.status === 'success')
+        .map((r) => r.result as `0x${string}`),
+    [indexResults]
+  )
+
+  // Step 2: 批量读取每个地址的捐款额
+  const amountCalls = useMemo(
+    () =>
+      contractAddress
+        ? funderAddresses.map((addr) => ({
+            address: contractAddress,
+            abi: FUND_ME_ABI,
+            functionName: 'getAddressToAmountFunded' as const,
+            args: [addr] as const,
+          }))
+        : [],
+    [contractAddress, funderAddresses]
+  )
+
+  const { data: amountResults, isLoading: isLoadingAmounts } = useReadContracts({
+    contracts: amountCalls,
+    allowFailure: true,
+    query: { enabled: enabled && funderAddresses.length > 0, refetchInterval: 5_000 },
+  })
+
+  const funders = useMemo(
+    () =>
+      funderAddresses
+        .map((address, i) => {
+          const entry = amountResults?.[i]
+          const amount = entry?.status === 'success' ? (entry.result as bigint) : 0n
+          return { address, amount }
+        })
+        .filter((f) => f.amount > 0n)
+        .sort((a, b) => (b.amount > a.amount ? 1 : -1)),
+    [funderAddresses, amountResults]
+  )
+
+  return {
+    funders,
+    isLoading: isLoadingAddresses || (funderAddresses.length > 0 && isLoadingAmounts),
+  }
 }

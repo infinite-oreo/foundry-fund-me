@@ -2,6 +2,7 @@ import { Header } from '@/components/Header'
 import { StatsPanel } from '@/components/StatsPanel'
 import { FundCard } from '@/components/FundCard'
 import { WithdrawCard } from '@/components/WithdrawCard'
+import { FundersLeaderboard } from '@/components/FundersLeaderboard'
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
         <StatsPanel />
         <FundCard />
         <WithdrawCard />
+        <FundersLeaderboard />
       </main>
     </div>
   )

@@ -1,6 +1,6 @@
 /**
- * [INPUT]: 依赖 useFund, useFundMeStats, useMyContribution, useContractAddress, useAccount
- * [OUTPUT]: Fund 表单组件，含金额输入、交易状态反馈
+ * [INPUT]: 依赖 useFund, useFundMeStats, useMyContribution, useContractAddress, useAccount, useChainId
+ * [OUTPUT]: Fund 表单组件，含金额输入、交易状态反馈、Etherscan 链接
  * [POS]: components/ 的写操作入口，被 app/page.tsx 渲染
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -8,8 +8,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import { useFund, useFundMeStats, useMyContribution, useContractAddress } from '@/hooks/useFundMe'
+import { getExplorerTxUrl } from '@/utils/explorer'
 
 function getErrorMessage(err: Error): string {
   const msg = err.message
@@ -22,7 +23,8 @@ export function FundCard() {
   const [amount, setAmount] = useState('')
   const contractAddress = useContractAddress()
   const { isConnected } = useAccount()
-  const { fund, isPending, isConfirming, isSuccess, error, reset } = useFund()
+  const chainId = useChainId()
+  const { fund, isPending, isConfirming, isSuccess, hash, error, reset } = useFund()
   const { refetchBalance } = useFundMeStats()
   const { refetch: refetchContribution } = useMyContribution()
 
@@ -86,9 +88,24 @@ export function FundCard() {
       </form>
 
       {isSuccess && (
-        <p className="text-chart-5 text-xs mt-3 flex items-center gap-1">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-chart-5" />
+        <p className="text-chart-5 text-xs mt-3 flex items-center gap-1.5">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-chart-5 shrink-0" />
           充值成功！
+          {hash && (() => {
+            const url = getExplorerTxUrl(chainId, hash)
+            return url ? (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 hover:opacity-70 transition-opacity"
+              >
+                查看交易
+              </a>
+            ) : (
+              <span className="font-mono opacity-60">{hash.slice(0, 10)}…</span>
+            )
+          })()}
         </p>
       )}
       {error && (

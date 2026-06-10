@@ -1,6 +1,6 @@
 /**
- * [INPUT]: 依赖 useWithdraw, useFundMeStats, useMyContribution, useContractAddress, useAccount
- * [OUTPUT]: Withdraw 操作卡片，仅对 owner 可见
+ * [INPUT]: 依赖 useWithdraw, useFundMeStats, useMyContribution, useContractAddress, useAccount, useChainId
+ * [OUTPUT]: Withdraw 操作卡片，仅对 owner 可见，成功后附 Etherscan 链接
  * [POS]: components/ 的 owner 专属操作，被 app/page.tsx 渲染（非 owner 不渲染）
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
@@ -9,15 +9,17 @@
 
 import { useEffect } from 'react'
 import { formatEther } from 'viem'
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import { useWithdraw, useFundMeStats, useMyContribution, useContractAddress } from '@/hooks/useFundMe'
+import { getExplorerTxUrl } from '@/utils/explorer'
 
 export function WithdrawCard() {
   const contractAddress = useContractAddress()
   const { address, isConnected } = useAccount()
+  const chainId = useChainId()
   const { owner, balance, refetchBalance } = useFundMeStats()
   const { refetch: refetchContribution } = useMyContribution()
-  const { withdraw, isPending, isConfirming, isSuccess, error, reset } = useWithdraw()
+  const { withdraw, isPending, isConfirming, isSuccess, hash, error, reset } = useWithdraw()
 
   const isOwner =
     isConnected && !!owner && !!address && owner.toLowerCase() === address.toLowerCase()
@@ -66,9 +68,24 @@ export function WithdrawCard() {
       </button>
 
       {isSuccess && (
-        <p className="text-chart-5 text-xs mt-3 flex items-center gap-1">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-chart-5" />
+        <p className="text-chart-5 text-xs mt-3 flex items-center gap-1.5">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-chart-5 shrink-0" />
           提取成功！
+          {hash && (() => {
+            const url = getExplorerTxUrl(chainId, hash)
+            return url ? (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 hover:opacity-70 transition-opacity"
+              >
+                查看交易
+              </a>
+            ) : (
+              <span className="font-mono opacity-60">{hash.slice(0, 10)}…</span>
+            )
+          })()}
         </p>
       )}
       {error && (
